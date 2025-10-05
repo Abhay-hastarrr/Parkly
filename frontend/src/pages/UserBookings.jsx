@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { apiClient } from '../utils/api';
+import ParkingTicket from '../components/ParkingTicket';
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -37,6 +38,7 @@ const UserBookings = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [activeBooking, setActiveBooking] = useState(null);
 
   const fetchBookings = async () => {
     try {
@@ -285,18 +287,16 @@ placeholder="Search by spot, city, vehicle number, or vehicle type..."
                         </td>
                         <td className="px-4 py-4 text-gray-700 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {/* Navigate Button */}
+                            {/* View Ticket Button */}
                             <button
-                              onClick={() => {
-                                toast.info('Navigation feature coming soon!');
-                              }}
+                              onClick={() => setActiveBooking(b)}
                               className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs shadow-sm inline-flex items-center gap-1.5"
-                              title="Navigate to location"
+                              title="View ticket"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6a2 2 0 012-2h6M7 7h.01M7 11h.01M7 15h.01M13 7h4a2 2 0 012 2v8a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h4z" />
                               </svg>
-                              Navigate
+                              View Ticket
                             </button>
 
                             {/* Cancel Button */}
@@ -319,6 +319,13 @@ placeholder="Search by spot, city, vehicle number, or vehicle type..."
           </div>
         </div>
       </div>
+
+      {activeBooking && (
+        <ParkingTicket
+          booking={activeBooking}
+          onClose={() => setActiveBooking(null)}
+        />
+      )}
     </div>
   );
 };

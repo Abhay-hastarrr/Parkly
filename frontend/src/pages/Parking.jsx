@@ -291,7 +291,12 @@ const Parking = () => {
               className="lg:w-[55%] opacity-0 transition-all duration-1000"
               style={{ transform: 'translateX(50px)' }}
             >
-              <MapHolder />
+              <MapHolder 
+                userLocation={userLocation}
+                parkingSpots={sortedSpots}
+                maxDistance={maxDistance}
+                loading={loading}
+              />
             </div>
           </div>
         </div>
