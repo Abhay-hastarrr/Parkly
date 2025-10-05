@@ -21,12 +21,13 @@ export const createBooking = async (req, res) => {
       customerName,
       customerPhone,
       vehicleNumber,
+      vehicleType,
       durationHours = 1,
       paymentMethod = 'COD',
       startTime // optional
     } = req.body;
 
-    if (!spotId || !customerName || !customerPhone || !vehicleNumber) {
+    if (!spotId || !customerName || !customerPhone || !vehicleNumber || !vehicleType) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
@@ -49,6 +50,16 @@ export const createBooking = async (req, res) => {
       return res.status(409).json({ success: false, message: 'No slots available for this spot' });
     }
 
+    // Validate vehicle type
+    const validTypes = ['cars','bikes','trucks','electric_vehicles'];
+    if (!validTypes.includes(vehicleType)) {
+      return res.status(400).json({ success: false, message: 'Invalid vehicle type' });
+    }
+    const allowed = Array.isArray(spot.allowedVehicleTypes) ? spot.allowedVehicleTypes : [];
+    if (allowed.length > 0 && !allowed.includes(vehicleType)) {
+      return res.status(400).json({ success: false, message: `Vehicle type not allowed for this spot. Allowed: ${allowed.join(', ')}` });
+    }
+
     const amount = computeAmount(spot.pricing, durationHours);
 
     // Atomically decrement availableSlots to avoid overbooking
@@ -69,6 +80,7 @@ export const createBooking = async (req, res) => {
         customerName,
         customerPhone,
         vehicleNumber,
+        vehicleType,
         durationHours: Math.max(1, Number(durationHours) || 1),
         amount,
         paymentMethod: 'COD',

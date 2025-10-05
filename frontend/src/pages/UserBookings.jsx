@@ -84,7 +84,8 @@ const UserBookings = () => {
       const spot = b.parkingSpot?.name?.toLowerCase() || '';
       const city = b.parkingSpot?.address?.city?.toLowerCase() || '';
       const vehicle = b.vehicleNumber?.toLowerCase() || '';
-      return spot.includes(q) || city.includes(q) || vehicle.includes(q);
+      const vtype = b.vehicleType ? String(b.vehicleType).replace('_',' ').toLowerCase() : '';
+      return spot.includes(q) || city.includes(q) || vehicle.includes(q) || vtype.includes(q);
     });
   }, [bookings, search]);
 
@@ -181,7 +182,7 @@ const UserBookings = () => {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by spot, city, or vehicle number..."
+placeholder="Search by spot, city, vehicle number, or vehicle type..."
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
                 />
                 <svg className="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,6 +209,7 @@ const UserBookings = () => {
                 <thead className="bg-gradient-to-r from-gray-50 to-blue-50 text-gray-700">
                   <tr>
                     <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider">Parking Spot</th>
+                    <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider">Vehicle</th>
                     <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider">Start Time</th>
                     <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider">Duration</th>
                     <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider">Amount</th>
@@ -250,6 +252,16 @@ const UserBookings = () => {
                         <td className="px-4 py-4 text-gray-700">
                           <div className="font-semibold text-gray-900">{b.parkingSpot?.name || '—'}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{b.parkingSpot?.address?.city || 'N/A'}</div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-700">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800">{b.vehicleNumber || '—'}</span>
+                            {b.vehicleType && (
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">
+                                {String(b.vehicleType).replace('_',' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-4 text-gray-700">
                           <div className="font-medium text-gray-800">

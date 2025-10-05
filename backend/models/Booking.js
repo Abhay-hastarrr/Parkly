@@ -8,6 +8,7 @@ const bookingSchema = new mongoose.Schema(
     customerName: { type: String, required: [true, 'Customer name is required'], trim: true },
     customerPhone: { type: String, required: [true, 'Customer phone is required'], trim: true },
     vehicleNumber: { type: String, required: [true, 'Vehicle number is required'], trim: true },
+    vehicleType: { type: String, enum: ['cars','bikes','trucks','electric_vehicles'], required: true },
 
     startTime: { type: Date, default: () => new Date(), required: true },
     durationHours: { type: Number, default: 1, min: [1, 'Minimum duration is 1 hour'], required: true },

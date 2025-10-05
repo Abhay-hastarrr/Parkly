@@ -23,6 +23,7 @@ const Checkout = () => {
     customerName: '',
     customerPhone: '',
     vehicleNumber: '',
+    vehicleType: '',
     durationHours: 1,
     paymentMethod: 'COD',
   });
@@ -101,7 +102,7 @@ const Checkout = () => {
       return;
     }
     if (!spot) return;
-    if (!form.customerName || !form.customerPhone || !form.vehicleNumber) {
+    if (!form.customerName || !form.customerPhone || !form.vehicleNumber || !form.vehicleType) {
       toast.warn('Please fill all required fields');
       return;
     }
@@ -117,6 +118,7 @@ const Checkout = () => {
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         vehicleNumber: form.vehicleNumber,
+        vehicleType: form.vehicleType,
         durationHours: Number(form.durationHours) || 1,
         paymentMethod: 'COD',
       });
@@ -314,6 +316,26 @@ const Checkout = () => {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Vehicle Type</label>
+                <select
+                  name="vehicleType"
+                  value={form.vehicleType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  required
+                >
+                  <option value="">Select vehicle type</option>
+                  {(spot?.allowedVehicleTypes && spot.allowedVehicleTypes.length > 0
+                    ? spot.allowedVehicleTypes
+                    : ['cars','bikes','trucks','electric_vehicles']
+                  ).map((vt) => (
+                    <option key={vt} value={vt}>
+                      {vt.replace('_',' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700">Duration (hours)</label>

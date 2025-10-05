@@ -99,7 +99,8 @@ const Bookings = () => {
       const name = b.customerName?.toLowerCase() || '';
       const phone = b.customerPhone?.toLowerCase() || '';
       const vehicle = b.vehicleNumber?.toLowerCase() || '';
-      return spot.includes(q) || name.includes(q) || phone.includes(q) || vehicle.includes(q);
+      const vtype = b.vehicleType ? String(b.vehicleType).replace('_',' ').toLowerCase() : '';
+      return spot.includes(q) || name.includes(q) || phone.includes(q) || vehicle.includes(q) || vtype.includes(q);
     });
   }, [bookings, search]);
 
@@ -132,7 +133,7 @@ const Bookings = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by customer, phone, vehicle, or spot name..."
+placeholder="Search by customer, phone, vehicle, vehicle type, or spot name..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -175,7 +176,16 @@ const Bookings = () => {
                       <div className="font-medium text-gray-800">{b.customerName}</div>
                       <div className="text-xs text-gray-500">{b.customerPhone}</div>
                     </Td>
-                    <Td>{b.vehicleNumber}</Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        <span>{b.vehicleNumber}</span>
+                        {b.vehicleType && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">
+                            {String(b.vehicleType).replace('_',' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+                        )}
+                      </div>
+                    </Td>
                     <Td>{new Date(b.startTime).toLocaleString()}</Td>
                     <Td>{b.durationHours}h</Td>
                     <Td>₹{b.amount}</Td>
