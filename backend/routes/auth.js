@@ -3,6 +3,7 @@ import {
   registerUser, 
   loginUser, 
   getUserProfile,
+  updateUserProfile,
   login, 
   getAdminProfile, 
   logout 
@@ -20,6 +21,11 @@ router.post('/login', loginUser);
 
 // Get user profile - authentication required
 router.get('/profile', authenticateUser, getUserProfile);
+
+// Update user profile - authentication required
+router.patch('/profile', authenticateUser, updateUserProfile);
+// Alias with PUT in case environments block PATCH
+router.put('/profile', authenticateUser, updateUserProfile);
 
 // Admin routes
 // Admin login route - no authentication required

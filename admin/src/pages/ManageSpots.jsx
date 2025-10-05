@@ -605,7 +605,7 @@ const ManageSpots = () => {
               </div>
             </div>
             
-            {/* Footer */}
+{/* Footer */}
             <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end space-x-3">
               <button
                 onClick={() => {
@@ -641,6 +641,7 @@ const ManageSpots = () => {
           getAuthHeader={getAuthHeader}
         />
       )}
+
     </div>
   );
 };

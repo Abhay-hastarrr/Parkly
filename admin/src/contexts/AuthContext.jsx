@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Call logout endpoint if token exists
       if (token) {
-        await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {
+        await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/admin/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     if (!token) return false;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/profile`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/admin/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

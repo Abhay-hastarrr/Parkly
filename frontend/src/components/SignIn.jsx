@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 
 const SignIn = ({ onSwitchToSignUp, onClose }) => {
   const { login, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -71,18 +74,21 @@ const SignIn = ({ onSwitchToSignUp, onClose }) => {
       
       await login(credentials);
       
-      // Close modal/form on successful login
+      // On success: close modal if provided, else redirect to home
       if (onClose) {
         onClose();
+      } else {
+        navigate('/');
       }
     } catch (error) {
-      // Error is handled by the auth context
-      console.error('Login failed:', error);
+      // Stay on /signin and show toast error
+      const msg = (error && (error.message || error.error || error?.errors?.[0])) || 'Wrong credentials';
+      toast.error(error.message || 'Wrong credentials');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 ">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -253,13 +259,13 @@ const SignIn = ({ onSwitchToSignUp, onClose }) => {
           <div className="text-center">
             <span className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <button
+              <a href="/signup"
                 type="button"
                 onClick={onSwitchToSignUp}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign up
-              </button>
+              </a>
             </span>
           </div>
         </form>

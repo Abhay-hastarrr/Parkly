@@ -1,10 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Plus, List, Calendar, User } from 'lucide-react';
+import { Plus, List, Calendar, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 const Home = () => {
-  const { admin } = useAuth();
+  const { getAuthHeader } = useAuth();
+  const [stats, setStats] = useState({
+    totalSpots: 0,
+    totalBookings: 0,
+    activeBookings: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+    loading: true,
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const headers = { 'Content-Type': 'application/json', ...getAuthHeader() };
+        const [spotsRes, bookingsRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parking-spots`, { headers }),
+          fetch(`${import.meta.env.VITE_BACKEND_URL}/api/bookings`, { headers })
+        ]);
+        const spotsData = await spotsRes.json().catch(() => ({ data: [] }));
+        const bookingsData = await bookingsRes.json().catch(() => ({ data: [] }));
+        const totalSpots = Array.isArray(spotsData.data) ? spotsData.data.length : 0;
+        const list = Array.isArray(bookingsData.data) ? bookingsData.data : [];
+        const totalBookings = list.length;
+        const pending = list.filter(b => b.status === 'pending').length;
+        const confirmed = list.filter(b => b.status === 'confirmed').length;
+        const completed = list.filter(b => b.status === 'completed').length;
+        const cancelled = list.filter(b => b.status === 'cancelled').length;
+        const activeBookings = pending + confirmed;
+        setStats({
+          totalSpots,
+          totalBookings,
+          activeBookings,
+          pending,
+          confirmed,
+          completed,
+          cancelled,
+          loading: false,
+        });
+      } catch (e) {
+        setStats({ totalSpots: 0, activeBookings: 0, loading: false });
+      }
+    };
+    load();
+  }, []);
 
   return (
     <main className="p-6 lg:p-8">
@@ -83,18 +128,30 @@ const Home = () => {
         {/* Quick Stats Section */}
         <div className="mt-12 bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-8 text-white">
           <h3 className="text-2xl font-bold mb-4">Quick Overview</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400 mb-2">0</div>
-              <div className="text-gray-300">Total Parking Spots</div>
+              <div className="text-3xl font-bold text-blue-400 mb-2">{stats.loading ? '—' : stats.totalSpots}</div>
+              <div className="text-gray-300">Total Spots</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-400 mb-2">0</div>
+              <div className="text-3xl font-bold text-purple-300 mb-2">{stats.loading ? '—' : stats.totalBookings}</div>
+              <div className="text-gray-300">All Bookings</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-400 mb-2">{stats.loading ? '—' : stats.activeBookings}</div>
               <div className="text-gray-300">Active Bookings</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400 mb-2">0</div>
-              <div className="text-gray-300">Revenue This Month</div>
+              <div className="text-3xl font-bold text-yellow-300 mb-2">{stats.loading ? '—' : stats.pending}</div>
+              <div className="text-gray-300">Pending</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-300 mb-2">{stats.loading ? '—' : stats.confirmed}</div>
+              <div className="text-gray-300">Confirmed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-red-300 mb-2">{stats.loading ? '—' : stats.cancelled}</div>
+              <div className="text-gray-300">Cancelled</div>
             </div>
           </div>
         </div>

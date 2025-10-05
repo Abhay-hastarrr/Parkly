@@ -7,6 +7,7 @@ import connectDB from './config/mongodb.js'
 import connectCloudinary from './config/cloudinary.js'
 import parkingSpotRoutes from './routes/parkingSpot.js'
 import authRoutes from './routes/auth.js'
+import bookingRoutes from './routes/booking.js'
 
 // Ensure .env is loaded from this directory regardless of current working directory
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }))
 //routes
 app.use('/api/parking-spots', parkingSpotRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/bookings', bookingRoutes)
 
 app.get('/',(req,res)=>{
     res.send("API Working")

@@ -30,11 +30,18 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Redirect to login page
-      window.location.href = '/login';
+      // Token expired or invalid OR wrong credentials
+      const reqUrl = error.config?.url || '';
+      const isAuthAttempt = reqUrl.includes('/auth/login') || reqUrl.includes('/auth/register');
+
+      if (!isAuthAttempt) {
+        // Only clear and redirect for non-auth attempts (e.g., protected APIs)
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Redirect to sign in page for protected routes
+        window.location.href = '/signin';
+      }
+      // For auth attempts, do not redirect. Let the caller handle error display.
     }
     return Promise.reject(error);
   }
@@ -66,6 +73,16 @@ export const authAPI = {
   getProfile: async () => {
     try {
       const response = await api.get('/auth/profile');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Update user profile
+  updateProfile: async (payload) => {
+    try {
+      const response = await api.patch('/auth/profile', payload);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -106,6 +123,15 @@ export const apiClient = {
   put: async (url, data, config = {}) => {
     try {
       const response = await api.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  patch: async (url, data, config = {}) => {
+    try {
+      const response = await api.patch(url, data, config);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

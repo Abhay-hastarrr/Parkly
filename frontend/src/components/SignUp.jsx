@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const SignUp = ({ onSwitchToLogin, onClose }) => {
   const { register, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -135,9 +137,11 @@ const SignUp = ({ onSwitchToLogin, onClose }) => {
       
       await register(userData);
       
-      // Close modal/form on successful registration
+      // On success: close modal if provided, else redirect to home
       if (onClose) {
         onClose();
+      } else {
+        navigate('/');
       }
     } catch (error) {
       // Error is handled by the auth context
@@ -219,7 +223,7 @@ const SignUp = ({ onSwitchToLogin, onClose }) => {
   }, [showCountryDropdown]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 ">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -447,13 +451,13 @@ const SignUp = ({ onSwitchToLogin, onClose }) => {
           <div className="text-center">
             <span className="text-sm text-gray-600">
               Already have an account?{' '}
-              <button
+              <a href='/signin'
                 type="button"
                 onClick={onSwitchToLogin}
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Sign in
-              </button>
+              </a>
             </span>
           </div>
         </form>

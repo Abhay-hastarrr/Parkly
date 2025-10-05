@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { parkingAPI } from '../utils/api';
+import { useNavigate } from 'react-router-dom';
 
 const Parking = () => {
   // Animation refs
@@ -10,12 +11,13 @@ const Parking = () => {
   // State for filters
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([0, 100]);
-  const [maxDistance, setMaxDistance] = useState(800); // Increased to 800 km to accommodate long distances
+  const [maxDistance, setMaxDistance] = useState(800);
   const [parkingType, setParkingType] = useState('all');
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [vehicleType, setVehicleType] = useState('all');
   const [city, setCity] = useState('all');
   const [sortBy, setSortBy] = useState('distance');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // State for data
   const [parkingSpots, setParkingSpots] = useState([]);
@@ -159,10 +161,8 @@ const Parking = () => {
   // Initialize data on component mount
   useEffect(() => {
     const initializeData = async () => {
-      // Fetch parking spots first
       await fetchParkingSpots();
-      // Then try to get user location (this will automatically calculate distances)
-      await getUserLocation(false); // Don't show loading for initial attempt
+      await getUserLocation(false);
     };
     
     initializeData();
@@ -178,7 +178,6 @@ const Parking = () => {
 
   // Filter parking spots based on current filters
   const filteredSpots = parkingSpots.filter(spot => {
-    // Search filter
     const searchText = searchQuery.toLowerCase();
     const matchesSearch = searchText === '' || 
       spot.name.toLowerCase().includes(searchText) ||
@@ -186,29 +185,16 @@ const Parking = () => {
       spot.address?.locality?.toLowerCase().includes(searchText) ||
       spot.address?.city?.toLowerCase().includes(searchText);
     
-    // Price filter (checking hourly rate)
     const hourlyRate = spot.pricing?.hourlyRate || 0;
     const matchesPrice = hourlyRate >= priceRange[0] && hourlyRate <= priceRange[1];
     
-    // Distance filter (only if distance is available)
     const matchesDistance = !spot.distance || spot.distance <= maxDistance;
-    
-    // Parking type filter
     const matchesType = parkingType === 'all' || spot.parkingType === parkingType;
-    
-    // City filter
     const matchesCity = city === 'all' || spot.address?.city === city;
+    const matchesVehicle = vehicleType === 'all' || spot.allowedVehicleTypes?.includes(vehicleType);
+    const matchesAmenities = selectedAmenities.length === 0 || selectedAmenities.every(amenity => spot.amenities?.includes(amenity));
     
-    // Vehicle type filter
-    const matchesVehicle = vehicleType === 'all' || 
-      spot.allowedVehicleTypes?.includes(vehicleType);
-    
-    // Amenities filter
-    const matchesAmenities = selectedAmenities.length === 0 ||
-      selectedAmenities.every(amenity => spot.amenities?.includes(amenity));
-    
-    return matchesSearch && matchesPrice && matchesDistance && 
-           matchesType && matchesCity && matchesVehicle && matchesAmenities;
+    return matchesSearch && matchesPrice && matchesDistance && matchesType && matchesCity && matchesVehicle && matchesAmenities;
   });
 
   // Sort filtered spots
@@ -222,7 +208,6 @@ const Parking = () => {
         return a.name.localeCompare(b.name);
       case 'distance':
       default:
-        // If distances are available, sort by distance, otherwise by name
         if (a.distance !== undefined && b.distance !== undefined) {
           return a.distance - b.distance;
         }
@@ -236,10 +221,10 @@ const Parking = () => {
     const formattedAmenities = parkingAPI.formatAmenities(spot.amenities || []);
     const formattedVehicleTypes = parkingAPI.formatVehicleTypes(spot.allowedVehicleTypes || []);
     const formattedParkingType = parkingAPI.formatParkingType(spot.parkingType);
+    const navigate = useNavigate();
     
     return (
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6 mb-4">
-        {/* Image */}
         {spot.imageUrl && (
           <div className="mb-4 rounded-lg overflow-hidden">
             <img 
@@ -329,7 +314,6 @@ const Parking = () => {
           </div>
         </div>
 
-        {/* Vehicle Types */}
         {formattedVehicleTypes.length > 0 && (
           <div className="mb-3">
             <div className="text-xs text-gray-500 mb-1">Vehicle Types:</div>
@@ -343,7 +327,6 @@ const Parking = () => {
           </div>
         )}
 
-        {/* Amenities */}
         {formattedAmenities.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {formattedAmenities.map((amenity, index) => (
@@ -354,7 +337,6 @@ const Parking = () => {
           </div>
         )}
 
-        {/* Special Instructions */}
         {spot.specialInstructions && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="text-xs font-medium text-yellow-800 mb-1">Special Instructions:</div>
@@ -363,7 +345,10 @@ const Parking = () => {
         )}
 
         <div className="flex space-x-3">
-          <button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+          <button
+            onClick={() => navigate(`/checkout/${spot._id || spot.id}`, { state: { spot } })}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+          >
             Book Now
           </button>
         </div>
@@ -372,7 +357,7 @@ const Parking = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen relative py-6 ">
+    <div className="bg-white min-h-screen relative py-6">
       {/* Floating animated shapes */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute w-64 h-64 bg-blue-100 rounded-full opacity-20 blur-3xl animate-pulse" style={{ top: '10%', left: '10%' }}></div>
@@ -403,7 +388,6 @@ const Parking = () => {
               Discover and book parking spaces near you in real-time. Filter by price, distance, and amenities.
             </p>
             
-            {/* Location Status in Header */}
             {userLocation && (
               <div className="mt-4 inline-flex items-center space-x-2 bg-green-50 px-4 py-2 rounded-full border border-green-200">
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,286 +410,257 @@ const Parking = () => {
             <div 
               ref={filtersRef}
               className="lg:w-[45%] opacity-0 transition-all duration-1000"
-              style={{ transform: 'translateX(-50px)' }}
-            >
-              {/* Filters Section */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"/>
-                  </svg>
-                  Filters
-                </h2>
-                
-                <div className="space-y-4">
-                  {/* Location Status */}
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-100">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-800 flex items-center">
-                        <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Your Location
-                      </h3>
-                      {!userLocation && !locationLoading && (
-                        <button
-                          onClick={() => getUserLocation(true)}
-                          disabled={locationLoading}
-                          className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors disabled:bg-blue-400"
-                        >
-                          Enable Location
-                        </button>
-                      )}
-                    </div>
-                    
-                    {locationLoading && (
-                      <div className="flex items-center text-sm text-blue-600">
-                        <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Getting your location...
-                      </div>
-                    )}
-                    
-                    {userLocation && !locationLoading && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm text-green-700">
-                            <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Location enabled - showing distances
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                if (parkingSpots.length > 0) {
-                                  const spotsWithDistance = calculateDistancesForSpots(userLocation, parkingSpots);
-                                  setParkingSpots(spotsWithDistance);
-                                }
-                              }}
-                              className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 font-medium"
-                            >
-                              Refresh Distances
-                            </button>
-                            <button
-                              onClick={() => getUserLocation(true)}
-                              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                              Update Location
-                            </button>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          Lat: {userLocation.latitude.toFixed(6)}, Lng: {userLocation.longitude.toFixed(6)}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {locationError && !locationLoading && (
-                      <div className="space-y-2">
-                        <div className="flex items-center text-sm text-red-600">
-                          <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                          {locationError.includes('denied') ? 'Location access denied' : 'Unable to get location'}
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => getUserLocation(true)}
-                            className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
-                          >
-                            Try Again
-                          </button>
-                          {locationError.includes('denied') && (
-                            <span className="text-xs text-gray-600">
-                              Enable location in browser settings
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {!userLocation && !locationError && !locationLoading && (
-                      <div className="text-sm text-gray-600">
-                        Enable location to see distances to parking spots
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Search */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Search Location</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Enter location or parking name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              style={{ transform: 'translateX(-50px)' }}>
+              
+              {/* Filters Section - Improved */}
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
+                {/* Compact Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"/>
                       </svg>
+                      <div>
+                        <h2 className="text-white font-semibold text-sm">Filters</h2>
+                        <p className="text-white/80 text-xs">
+                          {[searchQuery, priceRange[1] < 100, parkingType !== 'all', vehicleType !== 'all', city !== 'all', selectedAmenities.length > 0].filter(Boolean).length} active
+                        </p>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Price Range */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price Range: ₹{priceRange[0]} - ₹{priceRange[1]} per hour
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                    />
-                  </div>
-
-                  {/* Distance */}
-                  {userLocation && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Maximum Distance: {maxDistance} km
-                      </label>
-                      <input
-                        type="range"
-                        min="1"
-                        max="1500"
-                        step="1"
-                        value={maxDistance}
-                        onChange={(e) => setMaxDistance(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      />
-                    </div>
-                  )}
-
-                  {/* City Filter */}
-                  {uniqueCities.length > 1 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                      <select
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="all">All Cities</option>
-                        {uniqueCities.map((cityName) => (
-                          <option key={cityName} value={cityName}>
-                            {cityName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Parking Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Parking Type</label>
-                    <select
-                      value={parkingType}
-                      onChange={(e) => setParkingType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Types</option>
-                      {parkingTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {parkingAPI.formatParkingType(type)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Vehicle Type */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
-                    <select
-                      value={vehicleType}
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Vehicles</option>
-                      {vehicleTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Amenities */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {amenityOptions.map((amenity) => (
-                        <label key={amenity.value} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedAmenities.includes(amenity.value)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedAmenities([...selectedAmenities, amenity.value]);
-                              } else {
-                                setSelectedAmenities(
-                                  selectedAmenities.filter(a => a !== amenity.value)
-                                );
-                              }
-                            }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
-                          />
-                          <span className="text-sm text-gray-700">{amenity.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {selectedAmenities.length > 0 && (
-                      <button
-                        onClick={() => setSelectedAmenities([])}
-                        className="text-xs text-blue-600 hover:text-blue-800 mt-2"
-                      >
-                        Clear all
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Sort By */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {userLocation && <option value="distance">Distance</option>}
-                      <option value="price">Price</option>
-                      <option value="availability">Availability</option>
-                      <option value="name">Name</option>
-                    </select>
-                  </div>
-
-                  {/* Clear Filters */}
-                  <div className="pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setPriceRange([0, 100]);
-                        setMaxDistance(800);
-                        setParkingType('all');
-                        setSelectedAmenities([]);
-                        setVehicleType('all');
-                        setCity('all');
-                        setSortBy('distance');
-                      }}
-                      className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-white text-xs font-medium px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md transition-colors"
                     >
-                      Clear All Filters
+                      {isExpanded ? 'Less' : 'More'}
                     </button>
                   </div>
                 </div>
+
+                {/* Location Status */}
+                <div className={`px-4 py-2.5 border-b text-sm ${
+                  userLocation ? 'bg-green-50 border-green-100' : 
+                  locationError ? 'bg-red-50 border-red-100' : 
+                  'bg-blue-50 border-blue-100'
+                }`}>
+                  {locationLoading ? (
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="font-medium">Getting location...</span>
+                    </div>
+                  ) : userLocation ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span className="font-medium">Location enabled • {maxDistance}km radius</span>
+                      </div>
+                      <button
+                        onClick={() => getUserLocation(true)}
+                        className="p-1 hover:bg-green-100 rounded transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ) : locationError ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-red-700">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span className="font-medium">Location unavailable</span>
+                      </div>
+                      <button
+                        onClick={() => getUserLocation(true)}
+                        className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => getUserLocation(true)}
+                      className="flex items-center gap-2 text-blue-700 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      Enable location for nearby spots
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick Filters - Always Visible */}
+                <div className="p-4 space-y-3">
+                  {/* Search */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search location or parking name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  </div>
+
+                  {/* Quick Controls */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      {userLocation && <option value="distance">By Distance</option>}
+                      <option value="price">By Price</option>
+                      <option value="availability">By Available</option>
+                      <option value="name">By Name</option>
+                    </select>
+                    
+                    <select
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Vehicles</option>
+                      {vehicleTypes.map((type) => (
+                        <option key={type.value} value={type.value}>{type.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Advanced Filters - Expandable */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-gray-200">
+                    {/* Price Range */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-sm font-medium text-gray-700">Price Range</label>
+                        <span className="text-sm font-semibold text-blue-600">₹{priceRange[0]} - ₹{priceRange[1]}/hr</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Distance */}
+                    {userLocation && (
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-sm font-medium text-gray-700">Max Distance</label>
+                          <span className="text-sm font-semibold text-blue-600">{maxDistance} km</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="1"
+                          max="1500"
+                          step="10"
+                          value={maxDistance}
+                          onChange={(e) => setMaxDistance(parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+
+                    {/* Selects Grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {uniqueCities.length > 1 && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 mb-1 block">City</label>
+                          <select
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="all">All Cities</option>
+                            {uniqueCities.map((cityName) => (
+                              <option key={cityName} value={cityName}>{cityName}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 mb-1 block">Parking Type</label>
+                        <select
+                          value={parkingType}
+                          onChange={(e) => setParkingType(e.target.value)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Types</option>
+                          {parkingTypes.map((type) => (
+                            <option key={type} value={type}>{parkingAPI.formatParkingType(type)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Amenities */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Amenities {selectedAmenities.length > 0 && `(${selectedAmenities.length})`}
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {amenityOptions.map((amenity) => {
+                          const isSelected = selectedAmenities.includes(amenity.value);
+                          return (
+                            <button
+                              key={amenity.value}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedAmenities(selectedAmenities.filter(a => a !== amenity.value));
+                                } else {
+                                  setSelectedAmenities([...selectedAmenities, amenity.value]);
+                                }
+                              }}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              {amenity.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Clear Filters */}
+                    <div className="pt-3 border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setPriceRange([0, 100]);
+                          setMaxDistance(800);
+                          setParkingType('all');
+                          setSelectedAmenities([]);
+                          setVehicleType('all');
+                          setCity('all');
+                          setSortBy('distance');
+                        }}
+                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Clear All Filters
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Results Summary */}
@@ -731,7 +686,6 @@ const Parking = () => {
                   )}
                 </div>
                 
-                {/* Closest Spots Summary */}
                 {userLocation && sortedSpots.length > 0 && sortedSpots.some(spot => spot.distance !== undefined) && (
                   <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
                     <div className="flex items-center justify-between">
@@ -848,9 +802,7 @@ const Parking = () => {
                     </div>
                   </div>
                   
-                  {/* Map placeholder with parking spot indicators */}
                   <div className="absolute inset-4 pointer-events-none">
-                    {/* Mock parking spot markers */}
                     <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-green-500 rounded-full shadow-lg animate-bounce" style={{ animationDelay: '0.5s' }}></div>
                     <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-yellow-500 rounded-full shadow-lg animate-bounce" style={{ animationDelay: '1s' }}></div>
                     <div className="absolute bottom-1/3 left-1/2 w-4 h-4 bg-red-500 rounded-full shadow-lg animate-bounce" style={{ animationDelay: '1.5s' }}></div>

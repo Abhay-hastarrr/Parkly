@@ -212,6 +212,45 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+// Update User Profile
+export const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, phone, profileImage } = req.body;
+
+    const update = {};
+    if (typeof name === 'string' && name.trim().length >= 2) update.name = name.trim();
+    if (typeof phone === 'string' && phone.trim()) update.phone = phone.trim();
+    if (typeof profileImage === 'string') update.profileImage = profileImage.trim();
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields to update' });
+    }
+
+    // Ensure phone uniqueness if phone is being updated
+    if (update.phone) {
+      const existingPhone = await User.findOne({ phone: update.phone, _id: { $ne: userId } });
+      if (existingPhone) {
+        return res.status(400).json({ success: false, message: 'Phone number already in use' });
+      }
+    }
+
+    const updated = await User.findByIdAndUpdate(userId, update, { new: true, runValidators: true });
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Profile updated', user: updated.toPublicJSON() });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ success: false, message: 'Validation error', errors });
+    }
+    return res.status(500).json({ success: false, message: 'Server error while updating profile' });
+  }
+};
+
 // Admin Login controller (existing)
 export const login = async (req, res) => {
   try {
