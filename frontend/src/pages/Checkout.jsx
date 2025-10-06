@@ -106,31 +106,55 @@ const Checkout = () => {
       toast.warn('Please fill all required fields');
       return;
     }
-    if (form.paymentMethod !== 'COD') {
-      toast.info('Stripe checkout coming soon');
+
+    // COD flow (Stripe handled separately via dedicated button)
+    if (form.paymentMethod === 'COD') {
+      setSubmitting(true);
+      try {
+        await apiClient.post('/bookings/user', {
+          spotId,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          vehicleNumber: form.vehicleNumber,
+          vehicleType: form.vehicleType,
+          durationHours: Number(form.durationHours) || 1,
+          paymentMethod: 'COD',
+        });
+
+        toast.success('Booking created. Pay on arrival (COD).');
+        navigate('/parking');
+      } catch (err) {
+        console.error('Booking error:', err);
+        const msg = err?.message || err?.error || 'Failed to create booking';
+        toast.error(msg);
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
-    setSubmitting(true);
-    try {
-      await apiClient.post('/bookings/user', {
-        spotId,
-        customerName: form.customerName,
-        customerPhone: form.customerPhone,
-        vehicleNumber: form.vehicleNumber,
-        vehicleType: form.vehicleType,
-        durationHours: Number(form.durationHours) || 1,
-        paymentMethod: 'COD',
-      });
-
-      toast.success('Booking created. Pay on arrival (COD).');
-      navigate('/parking');
-    } catch (err) {
-      console.error('Booking error:', err);
-      const msg = err?.message || err?.error || 'Failed to create booking';
-      toast.error(msg);
-    } finally {
-      setSubmitting(false);
+    if (form.paymentMethod === 'STRIPE') {
+      try {
+        setSubmitting(true);
+        const res = await apiClient.post('/payments/stripe/checkout', {
+          spotId,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          vehicleNumber: form.vehicleNumber,
+          vehicleType: form.vehicleType,
+          durationHours: Number(form.durationHours) || 1,
+        });
+        const url = res?.data?.url || res?.url;
+        if (!url) throw new Error('Failed to get checkout URL');
+        window.location.href = url;
+        return; // Stop here; redirecting
+      } catch (err) {
+        console.error('Stripe Checkout error:', err);
+        toast.error(err?.message || 'Unable to start Stripe Checkout');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
     }
   };
 
@@ -381,17 +405,23 @@ const Checkout = () => {
                     </svg>
                   </div>
                 </label>
-                <label className="flex items-center space-x-3 p-4 border-2 border-gray-200 bg-gray-50 rounded-xl opacity-60 cursor-not-allowed">
+                <label className={`flex items-center space-x-3 p-4 border-2 rounded-xl transition-all duration-200 ${form.paymentMethod === 'STRIPE' ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-gray-50'}`}>
                   <input 
                     type="radio" 
                     name="paymentMethod" 
                     value="STRIPE" 
-                    disabled
-                    className="w-5 h-5"
+                    checked={form.paymentMethod === 'STRIPE'}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-purple-600 focus:ring-2 focus:ring-purple-500"
                   />
                   <div className="flex-1">
-                    <span className="font-semibold text-gray-600">Stripe Payment</span>
-                    <p className="text-sm text-gray-500">Coming soon...</p>
+                    <span className="font-semibold text-gray-900">Stripe Checkout</span>
+                    <p className="text-sm text-gray-600">You’ll be redirected to Stripe’s secure payment page</p>
+                  </div>
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
                   </div>
                 </label>
               </div>
@@ -411,6 +441,7 @@ const Checkout = () => {
               </div>
             </div>
 
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
               <button 
@@ -423,7 +454,7 @@ const Checkout = () => {
               <button 
                 type="submit" 
                 disabled={submitting} 
-                className="group relative px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className={`group relative px-8 py-3 ${form.paymentMethod === 'COD' ? 'bg-gradient-to-r from-green-600 to-emerald-600' : 'bg-gradient-to-r from-purple-600 to-blue-600'} text-white rounded-xl font-semibold hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
               >
                 {submitting ? (
                   <span className="flex items-center justify-center">
@@ -435,7 +466,7 @@ const Checkout = () => {
                   </span>
                 ) : (
                   <span className="flex items-center justify-center">
-                    Confirm Booking
+                    {form.paymentMethod === 'COD' ? 'Confirm Booking' : 'Pay with Stripe'}
                     <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
