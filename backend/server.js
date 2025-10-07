@@ -22,6 +22,12 @@ const port = process.env.PORT || 4000
 connectDB()
 connectCloudinary()
 
+//cors configuration
+const allowedOrigins = [
+  process.env.VITE_FRONTEND_URL,
+  process.env.VITE_ADMIN_URL
+];
+
 // Stripe webhook: must be before express.json()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' })
 const computeAmount = (pricing, durationHours = 1) => {
@@ -119,7 +125,11 @@ app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' 
 
 // middlewares
 app.use(express.json())
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true
+}));
 app.use(express.urlencoded({ extended: true }))
 
 //routes
