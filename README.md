@@ -1,6 +1,6 @@
 ## Project Overview
 
-Parkhub is a full-stack parking management system built with a microservices architecture consisting of three main applications:
+Parkhub is a full-stack parking management with real time location tracking  system built with a microservices architecture consisting of three main applications:
 
 - **Backend**: Express.js REST API with MongoDB
 - **Frontend**: React.js user-facing application  
