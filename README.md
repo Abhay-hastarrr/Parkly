@@ -1,7 +1,3 @@
-# WARP.md
-
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
-
 ## Project Overview
 
 Parkhub is a full-stack parking management system built with a microservices architecture consisting of three main applications:
