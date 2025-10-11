@@ -6,6 +6,8 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { motion } from 'framer-motion';
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,7 +17,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Enhanced custom icons with modern design
+// Enhanced custom icons with purple/pink theme
 const createIcon = (color, type = 'parking') => {
   const svgIcon = type === 'user'
     ? `<svg viewBox="0 0 32 32" width="32" height="32">
@@ -31,23 +33,27 @@ const createIcon = (color, type = 'parking') => {
                <feMergeNode in="SourceGraphic"/>
              </feMerge>
            </filter>
+           <linearGradient id="grad-user-${color}" x1="0%" y1="0%" x2="100%" y2="100%">
+             <stop offset="0%" style="stop-color:#9333ea;stop-opacity:1" />
+             <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+           </linearGradient>
          </defs>
-         <circle cx="16" cy="16" r="13" fill="${color}" opacity="0.15"/>
-         <circle cx="16" cy="16" r="11" fill="${color}" stroke="white" stroke-width="4" filter="url(#glow-${color})"/>
+         <circle cx="16" cy="16" r="13" fill="url(#grad-user-${color})" opacity="0.2"/>
+         <circle cx="16" cy="16" r="11" fill="url(#grad-user-${color})" stroke="white" stroke-width="4" filter="url(#glow-${color})"/>
          <circle cx="16" cy="16" r="6" fill="white"/>
-         <circle cx="16" cy="16" r="3" fill="${color}" opacity="0.6"/>
+         <circle cx="16" cy="16" r="3" fill="#9333ea" opacity="0.8"/>
        </svg>`
     : `<svg viewBox="0 0 32 40" width="32" height="40">
          <defs>
            <linearGradient id="grad-${color}" x1="0%" y1="0%" x2="0%" y2="100%">
              <stop offset="0%" style="stop-color:${color};stop-opacity:1" />
-             <stop offset="100%" style="stop-color:${color};stop-opacity:0.8" />
+             <stop offset="100%" style="stop-color:${color};stop-opacity:0.85" />
            </linearGradient>
            <filter id="shadow-${color}" x="-50%" y="-50%" width="200%" height="200%">
              <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
              <feOffset dx="0" dy="3" result="offsetblur"/>
              <feComponentTransfer>
-               <feFuncA type="linear" slope="0.35"/>
+               <feFuncA type="linear" slope="0.4"/>
              </feComponentTransfer>
              <feMerge>
                <feMergeNode/>
@@ -70,13 +76,13 @@ const createIcon = (color, type = 'parking') => {
   });
 };
 
-const userIcon = createIcon('#2563EB', 'user');
+const userIcon = createIcon('#9333ea', 'user');
 
 const parkingIcons = {
-  high: createIcon('#059669'),
-  medium: createIcon('#F59E0B'),
-  low: createIcon('#DC2626'),
-  full: createIcon('#6B7280'),
+  high: createIcon('#10b981'),
+  medium: createIcon('#f59e0b'),
+  low: createIcon('#ef4444'),
+  full: createIcon('#64748b'),
 };
 
 const MapController = ({ userLocation, parkingSpots, maxDistance }) => {
@@ -112,9 +118,9 @@ const RangeCircle = ({ userLocation, maxDistance }) => {
       center={[userLocation.latitude, userLocation.longitude]}
       radius={maxDistance}
       pathOptions={{
-        fillColor: '#3B82F6',
+        fillColor: '#9333ea',
         fillOpacity: 0.08,
-        color: '#3B82F6',
+        color: '#9333ea',
         weight: 2,
         opacity: 0.4,
         dashArray: '8, 8',
@@ -199,7 +205,7 @@ const AdvancedRouting = ({ userLocation, destination, onRouteFound, onError }) =
         }
 
         const routeLine = L.polyline(coordinates, {
-          color: '#2563EB',
+          color: '#9333ea',
           weight: 5,
           opacity: 0.9,
           lineCap: 'round',
@@ -302,7 +308,6 @@ const MapHolder = ({
   const handleSpotSelect = (spot) => {
     navigate(`/checkout/${spot._id}`);
   };
-
 
   useEffect(() => {
     return () => {
@@ -438,42 +443,53 @@ const MapHolder = ({
 
   if (loading) {
     return (
-      <div className="sticky top-24">
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl shadow-2xl border border-blue-100 h-[720px] flex flex-col items-center justify-center backdrop-blur-sm overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-100/20 to-purple-100/20"></div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-24"
+      >
+        <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 rounded-2xl shadow-xl shadow-purple-500/10 border border-purple-200/50 h-[720px] flex flex-col items-center justify-center backdrop-blur-xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-100/20 to-pink-100/20"></div>
           <div className="relative z-10 flex flex-col items-center">
-            <div className="relative mb-6">
-              <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-200 border-t-blue-600 shadow-lg"></div>
-              <div className="absolute inset-0 rounded-full h-20 w-20 border-4 border-transparent border-t-indigo-600 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            <div className="relative mb-6 w-48 h-48">
+              <DotLottieReact
+                src="/maploader.lottie"
+                loop
+                autoplay
+              />
             </div>
-            <h3 className="text-gray-800 font-bold text-xl mb-2">Loading Map</h3>
-            <p className="text-gray-600 text-sm">Finding parking spots near you...</p>
-            <div className="flex space-x-1 mt-4">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-            </div>
+            <h3 className="text-slate-800 font-bold text-xl mb-2">Loading Map</h3>
+            <p className="text-slate-600 text-sm">Finding parking spots near you...</p>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="sticky top-24">
-      <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 h-[720px] overflow-hidden relative">
-        <div className="relative p-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 border-b-2 border-white/20">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/50 via-indigo-500/50 to-purple-500/50 backdrop-blur-sm"></div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="sticky top-24"
+    >
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-purple-500/10 border border-purple-200/50 h-[720px] overflow-hidden relative">
+        <div className="relative p-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 border-b-2 border-white/20">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/50 via-pink-500/50 to-purple-500/50 backdrop-blur-sm"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex-1">
               {showRouting && routeDestination ? (
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
-                    <div className="bg-white/20 backdrop-blur-md p-2.5 rounded-xl shadow-lg">
+                    <motion.div 
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                      className="bg-white/20 backdrop-blur-md p-2.5 rounded-xl shadow-lg"
+                    >
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                       </svg>
-                    </div>
+                    </motion.div>
                     <div>
                       <h3 className="text-lg font-bold text-white drop-shadow-md">
                         Directions to {routeDestination.name}
@@ -545,15 +561,17 @@ const MapHolder = ({
             </div>
             <div className="flex items-center space-x-3">
               {showRouting ? (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleCloseRouting}
-                  className="flex items-center space-x-2 bg-white text-red-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex items-center space-x-2 bg-white text-red-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 transition-all shadow-lg hover:shadow-xl"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span>Close</span>
-                </button>
+                </motion.button>
               ) : (
                 <div className="hidden md:flex items-center space-x-3 bg-white/20 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg">
                   <div className="flex items-center space-x-1.5">
@@ -575,27 +593,24 @@ const MapHolder = ({
         </div>
         <div className="h-[calc(100%-90px)] relative">
           {parkingSpots.length === 0 && !loading ? (
-            <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+            <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50">
               <div className="relative mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center shadow-xl shadow-purple-500/20">
+                  <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-pink-400 rounded-full flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">No Parking Spots Found</h3>
-              <p className="text-gray-600 text-center max-w-md px-6 leading-relaxed">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">No Parking Spots Found</h3>
+              <p className="text-slate-600 text-center max-w-md px-6 leading-relaxed">
                 We couldn't find any parking locations in this area. Try adjusting your search filters or explore a different location.
               </p>
-              <button className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                Adjust Filters
-              </button>
             </div>
           ) : (
             <MapContainer
@@ -631,17 +646,17 @@ const MapHolder = ({
                   >
                     <Popup>
                       <div className="text-center p-3">
-                        <div className="font-bold text-blue-600 mb-2 text-base flex items-center justify-center">
-                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 text-base flex items-center justify-center">
+                          <svg className="w-4 h-4 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                           </svg>
                           {liveLocation ? 'Live Location' : 'Your Location'}
                         </div>
-                        <p className="text-sm text-gray-700 mb-1">
+                        <p className="text-sm text-slate-700 mb-1">
                           {liveLocation ? 'Updating in real-time' : 'Current position'}
                         </p>
                         {liveLocation && liveLocation.accuracy && (
-                          <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block">
+                          <p className="text-xs text-slate-500 bg-purple-100 px-2 py-1 rounded-full inline-block">
                             Accuracy: ±{Math.round(liveLocation.accuracy)}m
                           </p>
                         )}
@@ -681,18 +696,18 @@ const MapHolder = ({
                               alt={spot.name}
                               className="w-full h-32 object-cover"
                             />
-                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-gray-800 shadow-sm">
+                            <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg">
                               {formatPrice(spot)}
                             </div>
                           </div>
                         )}
-                        <h4 className="font-bold text-xl mb-3 text-gray-900 leading-tight">
+                        <h4 className="font-bold text-xl mb-3 text-slate-900 leading-tight">
                           {spot.name}
                         </h4>
                         <div className="space-y-2.5 mb-4">
-                          <div className="flex items-center space-x-2 text-gray-700">
-                            <div className="bg-gray-100 p-1.5 rounded-lg">
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex items-center space-x-2 text-slate-700">
+                            <div className="bg-purple-100 p-1.5 rounded-lg">
+                              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
@@ -702,23 +717,23 @@ const MapHolder = ({
                             </span>
                           </div>
                           {!spot.imageUrl && (
-                            <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl">
+                            <div className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200/50">
                               <div className="flex items-center space-x-2">
-                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                 </svg>
-                                <span className="font-bold text-blue-600 text-lg">
+                                <span className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent text-lg">
                                   {formatPrice(spot)}
                                 </span>
                               </div>
                             </div>
                           )}
-                          <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                          <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl">
                             <div className="flex items-center space-x-2">
-                              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              <span className="text-gray-700 font-semibold">
+                              <span className="text-slate-700 font-semibold">
                                 {spot.availableSlots}/{spot.totalSlots} available
                               </span>
                             </div>
@@ -726,7 +741,7 @@ const MapHolder = ({
                               availabilityStatus === 'high' ? 'bg-emerald-100 text-emerald-700' :
                               availabilityStatus === 'medium' ? 'bg-amber-100 text-amber-700' :
                               availabilityStatus === 'low' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-200 text-gray-700'
+                              'bg-slate-200 text-slate-700'
                             }`}>
                               {availabilityStatus === 'full' ? 'FULL' : 
                                availabilityStatus === 'low' ? 'LIMITED' :
@@ -734,9 +749,9 @@ const MapHolder = ({
                             </div>
                           </div>
                           {spot.distance && (
-                            <div className="flex items-center space-x-2 text-gray-700">
-                              <div className="bg-gray-100 p-1.5 rounded-lg">
-                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center space-x-2 text-slate-700">
+                              <div className="bg-purple-100 p-1.5 rounded-lg">
+                                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                 </svg>
                               </div>
@@ -745,7 +760,7 @@ const MapHolder = ({
                               </span>
                             </div>
                           )}
-                          <div className="inline-flex items-center bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full">
+                          <div className="inline-flex items-center bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-bold px-3 py-1.5 rounded-full border border-purple-200/50">
                             <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                               <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
@@ -757,13 +772,13 @@ const MapHolder = ({
                               {spot.amenities.slice(0, 4).map((amenity, index) => (
                                 <span 
                                   key={index}
-                                  className="text-xs bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 px-2.5 py-1 rounded-md font-semibold border border-gray-200"
+                                  className="text-xs bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 px-2.5 py-1 rounded-md font-semibold border border-slate-200"
                                 >
                                   {amenity.replace('_', ' ')}
                                 </span>
                               ))}
                               {spot.amenities.length > 4 && (
-                                <span className="text-xs text-gray-500 font-bold px-2 py-1">
+                                <span className="text-xs text-slate-500 font-bold px-2 py-1">
                                   +{spot.amenities.length - 4} more
                                 </span>
                               )}
@@ -774,7 +789,7 @@ const MapHolder = ({
                           {userLocation && (
                             <button
                               onClick={() => handleNavigateToSpot(spot)}
-                              className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-3 py-3 rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all text-sm font-bold flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105"
+                              className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-3 py-3 rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all text-sm font-bold flex items-center justify-center shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:scale-105 transform"
                             >
                               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
@@ -784,7 +799,7 @@ const MapHolder = ({
                           )}
                           <button
                             onClick={() => handleSpotSelect(spot)}
-                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all text-sm font-bold shadow-md hover:shadow-lg transform hover:scale-105"
+                            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-bold shadow-lg shadow-purple-500/30 hover:shadow-xl hover:scale-105 transform"
                           >
                             Book Now
                           </button>
@@ -798,33 +813,33 @@ const MapHolder = ({
           )}
         </div>
         <div className="absolute bottom-4 left-4 right-4 z-10">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-gray-200/50">
+          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-3 shadow-xl border border-purple-200/50">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center space-x-3">
                 {liveLocation ? (
-                  <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 rounded-xl border border-blue-100">
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-purple-50 to-pink-50 px-3 py-2 rounded-xl border border-purple-200">
                     <div className="relative">
-                      <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></div>
-                      <div className="absolute inset-0 w-2.5 h-2.5 bg-blue-400 rounded-full animate-ping"></div>
+                      <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-2.5 h-2.5 bg-purple-400 rounded-full animate-ping"></div>
                     </div>
-                    <span className="text-blue-700 font-bold">Live Tracking</span>
-                    <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-purple-700 font-bold">Live Tracking</span>
+                    <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full font-bold">
                       ±{Math.round(liveLocation.accuracy)}m
                     </span>
                   </div>
                 ) : userLocation ? (
-                  <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-2 rounded-xl border border-emerald-100">
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-2 rounded-xl border border-emerald-200">
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm"></div>
                     <span className="text-emerald-700 font-bold">Location Active</span>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-xl border border-gray-200">
-                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
-                    <span className="text-gray-600 font-semibold">Location Off</span>
+                  <div className="flex items-center space-x-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                    <div className="w-2.5 h-2.5 bg-slate-400 rounded-full"></div>
+                    <span className="text-slate-600 font-semibold">Location Off</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center space-x-2 text-gray-500 font-medium">
+              <div className="flex items-center space-x-2 text-slate-500 font-medium">
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -834,7 +849,7 @@ const MapHolder = ({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

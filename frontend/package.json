@@ -10,18 +10,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-react": "^0.17.4",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/postprocessing": "^3.0.4",
     "anime": "^0.1.2",
+    "animejs": "^4.2.2",
     "axios": "^1.12.2",
+    "framer-motion": "^12.23.22",
+    "gsap": "^3.13.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "lucide-react": "^0.544.0",
+    "motion": "^12.23.22",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.9.3",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

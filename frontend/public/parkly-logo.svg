@@ -1,0 +1,35 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <filter id="neonGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Dark background -->
+  <circle cx="32" cy="32" r="30" fill="#1F2937" />
+  
+  <!-- Neon Circle -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="url(#neonGrad)" stroke-width="3" filter="url(#neonGlow)" />
+  
+  <!-- P Letter Path for neon effect -->
+  <path 
+    d="M 20 18 L 20 46 L 24 46 L 24 34 L 34 34 C 40 34 44 30 44 26 C 44 22 40 18 34 18 Z M 24 22 L 34 22 C 37 22 40 23.5 40 26 C 40 28.5 37 30 34 30 L 24 30 Z" 
+    fill="none"
+    stroke="url(#neonGrad)" 
+    stroke-width="2.5"
+    filter="url(#neonGlow)"
+  />
+  
+  <!-- Inner glow -->
+  <circle cx="32" cy="32" r="22" fill="url(#neonGrad)" opacity="0.1" />
+</svg>

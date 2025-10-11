@@ -1,155 +1,254 @@
 import { parkingAPI } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
+// ✅ NEW MODERN PARKING SPOT CARD (fully integrated)
 const ParkingSpotCard = ({ spot }) => {
+  const navigate = useNavigate();
+
   const hourlyRate = spot.pricing?.hourlyRate || 0;
   const currency = spot.pricing?.currency === 'INR' ? '₹' : '$';
   const formattedAmenities = parkingAPI.formatAmenities(spot.amenities || []);
   const formattedVehicleTypes = parkingAPI.formatVehicleTypes(spot.allowedVehicleTypes || []);
   const formattedParkingType = parkingAPI.formatParkingType(spot.parkingType);
-  const navigate = useNavigate();
+
+  const availabilityPercentage = spot.totalSlots > 0 
+    ? (spot.availableSlots / spot.totalSlots) * 100 
+    : 0;
+
+  const getAvailabilityColor = () => {
+    if (availabilityPercentage > 50) return 'text-emerald-600 bg-emerald-50';
+    if (availabilityPercentage > 20) return 'text-amber-600 bg-amber-50';
+    return 'text-rose-600 bg-rose-50';
+  };
+
   
+
+  const handleBookClick = () => {
+    navigate(`/checkout/${spot._id || spot.id}`, { state: { spot } });
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-6 mb-4">
-      {/* Image */}
-      {spot.imageUrl && (
-        <div className="mb-4 rounded-lg overflow-hidden">
-          <img 
-            src={spot.imageUrl} 
-            alt={spot.name}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
-          />
-        </div>
-      )}
-      
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1 mr-4">
-          <h3 className="text-lg font-bold text-gray-900 mb-1">{spot.name}</h3>
-          <p className="text-sm text-gray-600 mb-1">{spot.address?.fullAddress}</p>
-          <p className="text-xs text-gray-500">{spot.address?.locality}, {spot.address?.city}</p>
-          <div className="mt-2">
-            <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+    <div className="group relative bg-white rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-blue-200">
+      {/* Image Section with Overlay */}
+      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+        {spot.imageUrl ? (
+          <>
+            <img 
+              src={spot.imageUrl} 
+              alt={spot.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+        )}
+        
+        {/* Top Badges */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+          <div className="flex gap-2 flex-wrap">
+            <span className="px-3 py-1.5 bg-white/95 backdrop-blur-sm text-gray-800 text-xs font-semibold rounded-full shadow-lg">
               {formattedParkingType}
             </span>
+            
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-blue-600">{currency}{hourlyRate}</div>
-          <div className="text-xs text-gray-500">per hour</div>
-          {spot.pricing?.dailyRate && (
-            <div className="text-sm text-gray-600 mt-1">
-              {currency}{spot.pricing.dailyRate}/day
+
+        {/* Price Badge */}
+        <div className="absolute bottom-4 right-4">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-xl">
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {currency}{hourlyRate}
             </div>
-          )}
+            <div className="text-xs text-gray-600 font-medium text-center">per hour</div>
+            {spot.pricing?.dailyRate && (
+              <div className="text-xs text-gray-600 mt-1">
+                {currency}{spot.pricing.dailyRate}/day
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          {spot.distance !== undefined ? (
-            <div className="flex items-center bg-green-50 px-2 py-1 rounded-full">
-              <svg className="w-4 h-4 text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-green-700">
-                  {spot.distance} km away
-                </span>
-                <span className="text-xs text-green-600">
+
+      {/* Content Section */}
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+            {spot.name}
+          </h3>
+          <div className="flex items-start gap-2 text-gray-600">
+            <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <div className="text-sm">
+              <p className="font-medium">{spot.address?.fullAddress}</p>
+              <p className="text-gray-500">{spot.address?.locality}, {spot.address?.city}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Distance */}
+          {spot.distance !== undefined && (
+            <div className="flex items-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 font-medium">Distance</div>
+                <div className="text-sm font-bold text-gray-900">{spot.distance} km</div>
+                <div className="text-xs text-blue-600">
                   {Math.round(spot.distance * 12)} min walk
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Operating Hours */}
+          <div className="flex items-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-3">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <div className="text-xs text-gray-600 font-medium">Hours</div>
+              <div className="text-sm font-bold text-gray-900">{spot.operatingHours}</div>
+            </div>
+          </div>
+
+          {/* Availability */}
+          <div className="col-span-2 flex items-center gap-3 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3">
+            <div className={`w-10 h-10 ${getAvailabilityColor().split(' ')[1]} rounded-lg flex items-center justify-center flex-shrink-0`}>
+              <svg className={`w-5 h-5 ${getAvailabilityColor().split(' ')[0]}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-gray-600 font-medium">Availability</span>
+                <span className={`text-sm font-bold ${getAvailabilityColor().split(' ')[0]}`}>
+                  {spot.availableSlots || 0}/{spot.totalSlots || 0}
                 </span>
               </div>
-              {spot.distance < 1 && (
-                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                  Very Close
-                </span>
-              )}
-              {spot.distance > 1 && spot.distance <= 2 && (
-                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                  Nearby
-                </span>
-              )}
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    availabilityPercentage > 50 ? 'bg-emerald-500' : 
+                    availabilityPercentage > 20 ? 'bg-amber-500' : 'bg-rose-500'
+                  }`}
+                  style={{ width: `${availabilityPercentage}%` }}
+                ></div>
+              </div>
             </div>
-          ) : (
-            <div className="flex items-center bg-gray-50 px-2 py-1 rounded-full">
-              <svg className="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </div>
+        </div>
+
+        {/* Vehicle Types */}
+        {formattedVehicleTypes.length > 0 && (
+          <div className="mb-4">
+            <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
               </svg>
-              <span className="text-xs text-gray-500">Enable location for distance</span>
+              Vehicle Types
             </div>
-          )}
-          <div className="flex items-center">
-            <svg className="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <div className="flex flex-wrap gap-2">
+              {formattedVehicleTypes.map((type, index) => (
+                <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-medium rounded-lg shadow-sm">
+                  {type}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Amenities */}
+        {formattedAmenities.length > 0 && (
+          <div className="mb-4">
+            <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+              </svg>
+              Amenities
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formattedAmenities.slice(0, 4).map((amenity, index) => (
+                <span key={index} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg border border-blue-100">
+                  {amenity}
+                </span>
+              ))}
+              {formattedAmenities.length > 4 && (
+                <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg">
+                  +{formattedAmenities.length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Special Instructions */}
+        {spot.specialInstructions && (
+          <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-lg">
+            <div className="flex gap-2">
+              <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <div className="text-xs font-semibold text-amber-900 mb-1">Important Note</div>
+                <div className="text-xs text-amber-800 leading-relaxed">{spot.specialInstructions}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleBookClick}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3.5 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
             </svg>
-            <span className="text-sm text-gray-600">{spot.operatingHours}</span>
-          </div>
+            Book Now
+          </button>
         </div>
-        <div className="flex items-center">
-          <span className="text-sm text-gray-600 mr-2">Available:</span>
-          <span className={`text-sm font-semibold ${
-            (spot.availableSlots || 0) > (spot.totalSlots * 0.5) ? 'text-green-600' : 
-            (spot.availableSlots || 0) > (spot.totalSlots * 0.2) ? 'text-yellow-600' : 'text-red-600'
-          }`}>
-            {spot.availableSlots || 0}/{spot.totalSlots || 0}
-          </span>
-        </div>
-      </div>
 
-      {/* Vehicle Types */}
-      {formattedVehicleTypes.length > 0 && (
-        <div className="mb-3">
-          <div className="text-xs text-gray-500 mb-1">Vehicle Types:</div>
-          <div className="flex flex-wrap gap-1">
-            {formattedVehicleTypes.map((type, index) => (
-              <span key={index} className="px-2 py-1 bg-purple-50 text-purple-700 text-xs rounded-full">
-                {type}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Amenities */}
-      {formattedAmenities.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {formattedAmenities.map((amenity, index) => (
-            <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
-              {amenity}
+        {/* Daily Rate Footer */}
+        {spot.pricing?.dailyRate && (
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-center gap-2 text-gray-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+            <span className="text-sm">
+              Full day: <span className="font-bold text-gray-900">{currency}{spot.pricing.dailyRate}</span>
             </span>
-          ))}
-        </div>
-      )}
-
-      {/* Special Instructions */}
-      {spot.specialInstructions && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="text-xs font-medium text-yellow-800 mb-1">Special Instructions:</div>
-          <div className="text-xs text-yellow-700">{spot.specialInstructions}</div>
-        </div>
-      )}
-
-      <div className="flex space-x-3">
-        <button
-          onClick={() => navigate(`/checkout/${spot._id || spot.id}`, { state: { spot } })}
-          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-        >
-          Book Now
-        </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
+// ✅ PRESERVED PARKING SPOTS SECTION (unchanged logic, just uses new card)
 const ParkingSpotsSection = ({
   loading,
   error,
-  sortedSpots,
+  sortedSpots = [],
   parkingSpots,
   fetchParkingSpots,
   userLocation
@@ -274,4 +373,6 @@ const ParkingSpotsSection = ({
   );
 };
 
+
+export { ParkingSpotCard, ParkingSpotsSection };
 export default ParkingSpotsSection;

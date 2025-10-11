@@ -25,7 +25,8 @@ connectCloudinary()
 //cors configuration
 const allowedOrigins = [
   process.env.VITE_FRONTEND_URL,
-  process.env.VITE_ADMIN_URL
+  process.env.VITE_ADMIN_URL,
+  "http://localhost:5173"
 ];
 
 // Stripe webhook: must be before express.json()
